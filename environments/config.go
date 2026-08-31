@@ -7,7 +7,7 @@ import (
 	"slices"
 	"strings"
 
-	"aegion-dynamic/api-console/auth/cognito"
+	"aegion-dynamic/apismith/auth/cognito"
 
 	"gopkg.in/yaml.v3"
 )

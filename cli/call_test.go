@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"aegion-dynamic/api-console/openapi"
-	"aegion-dynamic/api-console/request"
+	"aegion-dynamic/apismith/openapi"
+	"aegion-dynamic/apismith/request"
 )
 
 func TestParseKV(t *testing.T) {

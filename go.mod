@@ -1,4 +1,4 @@
-module aegion-dynamic/api-console
+module aegion-dynamic/apismith
 
 go 1.25
 

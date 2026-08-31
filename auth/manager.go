@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"aegion-dynamic/api-console/auth/cognito"
+	"aegion-dynamic/apismith/auth/cognito"
 )
 
 // Manager holds process-local authentication state. JWTs live in memory only

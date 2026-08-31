@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"aegion-dynamic/api-console/openapi"
+	"aegion-dynamic/apismith/openapi"
 
 	"github.com/spf13/cobra"
 )

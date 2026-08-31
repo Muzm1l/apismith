@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"aegion-dynamic/api-console/auth/cognito"
+	"aegion-dynamic/apismith/auth/cognito"
 
 	"github.com/spf13/cobra"
 )

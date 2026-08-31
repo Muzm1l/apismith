@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"aegion-dynamic/api-console/environments"
-	"aegion-dynamic/api-console/server"
+	"aegion-dynamic/apismith/environments"
+	"aegion-dynamic/apismith/server"
 
 	"github.com/spf13/cobra"
 )

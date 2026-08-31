@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"aegion-dynamic/api-console/environments"
-	"aegion-dynamic/api-console/openapi"
+	"aegion-dynamic/apismith/environments"
+	"aegion-dynamic/apismith/openapi"
 
 	"github.com/joho/godotenv"
 )

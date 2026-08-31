@@ -8,9 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"aegion-dynamic/api-console/auth/cognito"
-	"aegion-dynamic/api-console/openapi"
-	"aegion-dynamic/api-console/request"
+	"aegion-dynamic/apismith/auth/cognito"
+	"aegion-dynamic/apismith/openapi"
+	"aegion-dynamic/apismith/request"
 
 	"github.com/spf13/cobra"
 )

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"aegion-dynamic/api-console/cli"
+	"aegion-dynamic/apismith/cli"
 )
 
 // console is an alias for `apismith ui`. With no arguments it starts the

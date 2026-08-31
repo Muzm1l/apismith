@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"aegion-dynamic/api-console/auth"
-	"aegion-dynamic/api-console/environments"
-	"aegion-dynamic/api-console/openapi"
-	"aegion-dynamic/api-console/request"
-	"aegion-dynamic/api-console/ui"
+	"aegion-dynamic/apismith/auth"
+	"aegion-dynamic/apismith/environments"
+	"aegion-dynamic/apismith/openapi"
+	"aegion-dynamic/apismith/request"
+	"aegion-dynamic/apismith/ui"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
