@@ -37,6 +37,9 @@ func RunUI() error {
 	fmt.Printf("  spec        %s\n", rt.cfg.OpenAPISpec)
 	fmt.Printf("  endpoints   %d\n", len(rt.catalog.Endpoints))
 	fmt.Printf("  environment %s\n", rt.cfg.DefaultEnvironment)
+	if env := rt.cfg.Find(rt.cfg.DefaultEnvironment); env != nil && env.BaseURL != "" {
+		fmt.Printf("  target      %s\n", env.BaseURL)
+	}
 	fmt.Printf("  listen      http://localhost%s\n\n", addr)
 	return http.ListenAndServe(addr, server.New(rt.cfg, rt.catalog).Handler())
 }

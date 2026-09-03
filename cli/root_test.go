@@ -23,6 +23,23 @@ func TestHelpListsActions(t *testing.T) {
 	}
 }
 
+func TestCallHelpMentionsBaseURL(t *testing.T) {
+	cmd := newRootCmd()
+	buf := &bytes.Buffer{}
+	cmd.SetOut(buf)
+	cmd.SetErr(buf)
+	cmd.SetArgs([]string{"call", "--help"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	out := buf.String()
+	for _, want := range []string{"--base-url", "hosted"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("call help missing %q:\n%s", want, out)
+		}
+	}
+}
+
 func TestActionHelpHasNotes(t *testing.T) {
 	for _, action := range []string{"ui", "jwt", "ls", "call"} {
 		cmd := newRootCmd()

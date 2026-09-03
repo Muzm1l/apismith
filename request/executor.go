@@ -44,6 +44,9 @@ type ExecuteInput struct {
 	JWT               string            `json:"jwt"`
 	CustomAuth        string            `json:"custom_authorization"`
 	ConfirmProduction bool              `json:"confirm_production"`
+	// BaseURL optionally overrides the selected environment's base URL
+	// for this request (hosted server, tunnel, etc.).
+	BaseURL string `json:"base_url,omitempty"`
 }
 
 // ExecuteOutput is the captured HTTP response (body truncated if huge).
@@ -71,6 +74,35 @@ func NewExecutor() *Executor {
 	return &Executor{
 		Client: &http.Client{Timeout: 30 * time.Second},
 	}
+}
+
+// ResolveBaseURL returns override if set, otherwise configured.
+// Both must be an absolute http(s) URL with a host.
+func ResolveBaseURL(configured, override string) (string, error) {
+	chosen := strings.TrimSpace(override)
+	if chosen == "" {
+		chosen = strings.TrimSpace(configured)
+	}
+	return NormalizeBaseURL(chosen)
+}
+
+// NormalizeBaseURL trims trailing slashes and checks the URL is http(s).
+func NormalizeBaseURL(raw string) (string, error) {
+	raw = strings.TrimRight(strings.TrimSpace(raw), "/")
+	if raw == "" {
+		return "", fmt.Errorf("base url is required")
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", fmt.Errorf("invalid base url %q: %w", raw, err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return "", fmt.Errorf("base url must be http or https, got %q", raw)
+	}
+	if u.Host == "" {
+		return "", fmt.Errorf("invalid base url %q: missing host", raw)
+	}
+	return raw, nil
 }
 
 // BuildURL joins base URL, path template, path params, and query string.

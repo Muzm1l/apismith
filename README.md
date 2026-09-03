@@ -61,6 +61,8 @@ apismith jwt --token-only                 # pipeable access token
 apismith jwt path/to/config.json          # drop-in for jwt-token-printer
 
 apismith call GET /users/me --env dev
+apismith call GET /users/me --env staging
+apismith call GET /users/me --base-url https://api.example.com/api/v1
 apismith call POST /users --body '{"email":"..."}'
 apismith call GET /users/{id} --path id=123 --query page=1
 apismith call createUser --body-file user.json
@@ -85,9 +87,25 @@ Override with `CONSOLE_OPENAPI_SPEC`, or place a copy at `openapi/openapi.yaml`.
 
 ### Environments
 
-Edit `config/environments.yaml`. DEV and STAGING are enabled; PRODUCTION, if
-you add it with `production: true`, requires `--confirm-production` (CLI) or
-an explicit confirmation in the UI.
+Edit `config/environments.yaml`. Each environment has a `base_url` — that is
+the API you hit, local or hosted. DEV defaults to localhost; set STAGING (or
+add another env) to your deployed server:
+
+```yaml
+  - id: staging
+    name: STAGING
+    base_url: https://your-hosted-api.example.com/api/v1
+    production: false
+```
+
+One-off overrides without editing the file:
+
+- CLI: `apismith call GET /users/me --base-url https://your-hosted-api.example.com/api/v1`
+- UI: edit the **Base URL** field next to the environment selector
+- `.env`: `CONSOLE_BASE_URL=https://your-hosted-api.example.com/api/v1` (overlays the default env)
+
+DEV and STAGING are enabled; PRODUCTION, if you add it with `production: true`,
+requires `--confirm-production` (CLI) or an explicit confirmation in the UI.
 
 Secrets do **not** belong in that file. Put them in:
 

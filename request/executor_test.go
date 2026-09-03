@@ -8,6 +8,32 @@ import (
 	"testing"
 )
 
+func TestResolveBaseURL(t *testing.T) {
+	got, err := ResolveBaseURL("http://localhost:8080/api/v1/", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "http://localhost:8080/api/v1" {
+		t.Fatalf("trim: %s", got)
+	}
+	got, err = ResolveBaseURL("http://localhost:8080/api/v1", "https://api.example.com/api/v1/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "https://api.example.com/api/v1" {
+		t.Fatalf("override: %s", got)
+	}
+	if _, err := ResolveBaseURL("", ""); err == nil {
+		t.Fatal("expected error for empty url")
+	}
+	if _, err := ResolveBaseURL("not-a-url", ""); err == nil {
+		t.Fatal("expected error for missing scheme")
+	}
+	if _, err := ResolveBaseURL("ftp://example.com", ""); err == nil {
+		t.Fatal("expected error for non-http scheme")
+	}
+}
+
 func TestBuildURL(t *testing.T) {
 	u, err := BuildURL("http://localhost:8080/api/v1", "/users/{id}", map[string]string{"id": "abc"}, map[string]string{"page": "1"})
 	if err != nil {

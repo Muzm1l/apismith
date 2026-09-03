@@ -14,8 +14,9 @@ Notes:
   operation is not in the spec.
 
   Default config is config/environments.yaml (--config / -c).
-  OpenAPI path, listen address, and default env overlay from .env
-  (CONSOLE_OPENAPI_SPEC, CONSOLE_LISTEN, CONSOLE_DEFAULT_ENV).
+  OpenAPI path, listen address, default env, and target URL overlay
+  from .env (CONSOLE_OPENAPI_SPEC, CONSOLE_LISTEN, CONSOLE_DEFAULT_ENV,
+  CONSOLE_BASE_URL).
 
   Secrets do not belong in environments.yaml. Put them in
   config/credentials.yaml (gitignored) or COGNITO_* / CONSOLE_USERNAME
@@ -34,7 +35,8 @@ Notes:
 const rootExamples = `  apismith ui
   apismith ls --search login
   apismith jwt --token-only
-  apismith call GET /users/me --env dev`
+  apismith call GET /users/me --env staging
+  apismith call GET /users/me --base-url https://staging.example.com/api/v1`
 
 const uiHelp = `Start the local API explorer.
 
@@ -50,6 +52,9 @@ Notes:
 
   The UI loads the same OpenAPI spec as ls and call. New endpoints
   appear automatically when the spec changes (restart ui to reload).
+
+  Pick an environment or edit the Base URL field to send requests to a
+  hosted server instead of localhost.
 
   Generate JWT in the auth panel, or reuse credentials from
   config/credentials.yaml / environment variables.`
@@ -128,9 +133,13 @@ Notes:
   Status line goes to stderr; response body goes to stdout, so you can
   pipe the body. --quiet suppresses the body. --json prints one object.
 
+  --base-url sends this request to a hosted (or any) server instead of
+  the environment's configured URL. Auth still comes from --env.
+
   Production targets require --confirm-production.`
 
 const callExamples = `  apismith call GET /users/me --env dev
+  apismith call GET /users/me --base-url https://staging.example.com/api/v1
   apismith call GET /users/{id} --path id=123 --query page=1
   apismith call GET /users/123
   apismith call POST /users --body '{"email":"test@example.com"}'

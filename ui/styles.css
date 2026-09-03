@@ -70,6 +70,7 @@ textarea { min-height: 220px; font-family: var(--mono); font-size: 12.5px; resiz
 .field { display: flex; flex-direction: column; gap: 0.3rem; }
 .field > span, h3 { color: var(--muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; }
 .field.compact { min-width: 180px; }
+.field.compact.url { min-width: 280px; flex: 1; max-width: 440px; }
 .inline { display: flex; gap: 0.45rem; }
 .inline input { flex: 1; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }

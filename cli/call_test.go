@@ -1,9 +1,15 @@
 package cli
 
 import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"aegion-dynamic/apismith/auth/cognito"
 	"aegion-dynamic/apismith/openapi"
 	"aegion-dynamic/apismith/request"
 )
@@ -55,4 +61,115 @@ func TestResolveCall(t *testing.T) {
 	if err != nil || ep.Method != "POST" {
 		t.Fatalf("operationId: ep=%+v err=%v", ep, err)
 	}
+}
+
+func TestSelectAuthToken(t *testing.T) {
+	tokens := &cognito.Tokens{AccessToken: "access", IDToken: "id"}
+	got, err := selectAuthToken(tokens, false)
+	if err != nil || got != "access" {
+		t.Fatalf("access: got=%q err=%v", got, err)
+	}
+	got, err = selectAuthToken(tokens, true)
+	if err != nil || got != "id" {
+		t.Fatalf("id: got=%q err=%v", got, err)
+	}
+
+	_, err = selectAuthToken(&cognito.Tokens{AccessToken: "access", IDToken: ""}, true)
+	if err == nil {
+		t.Fatal("expected error for empty id_token")
+	}
+	_, err = selectAuthToken(&cognito.Tokens{AccessToken: "", IDToken: "id"}, false)
+	if err == nil {
+		t.Fatal("expected error for empty access_token")
+	}
+	_, err = selectAuthToken(nil, false)
+	if err == nil {
+		t.Fatal("expected error for nil tokens")
+	}
+}
+
+func TestCallBaseURLOverride(t *testing.T) {
+	var gotHost, gotPath, gotAuth string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotHost = r.Host
+		gotPath = r.URL.Path
+		gotAuth = r.Header.Get("Authorization")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"source":"hosted-mock"}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	cfgPath := writeCallTestConfig(t, "http://127.0.0.1:1/must-not-hit")
+	t.Cleanup(func() {
+		jsonOut = false
+		configPath = ""
+	})
+
+	cmd := newRootCmd()
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(&bytes.Buffer{})
+	cmd.SetArgs([]string{
+		"--config", cfgPath,
+		"call", "GET", "/users",
+		"--no-auth",
+		"--quiet",
+		"--base-url", srv.URL + "/api/v1",
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("call: %v", err)
+	}
+	if gotPath != "/api/v1/users" {
+		t.Fatalf("hosted path: %q host=%q", gotPath, gotHost)
+	}
+	if gotAuth != "" {
+		t.Fatalf("unexpected auth header %q", gotAuth)
+	}
+	if gotHost == "" || gotHost == "127.0.0.1:1" {
+		t.Fatalf("did not reach hosted mock, host=%q", gotHost)
+	}
+}
+
+func TestCallBaseURLInvalid(t *testing.T) {
+	cfgPath := writeCallTestConfig(t, "http://127.0.0.1:1/unused")
+	t.Cleanup(func() {
+		jsonOut = false
+		configPath = ""
+	})
+
+	cmd := newRootCmd()
+	errBuf := &bytes.Buffer{}
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(errBuf)
+	cmd.SetArgs([]string{
+		"--config", cfgPath,
+		"call", "GET", "/users",
+		"--no-auth",
+		"--base-url", "ftp://example.com",
+	})
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("expected invalid base url error")
+	} else if !strings.Contains(err.Error(), "http or https") {
+		t.Fatalf("error: %v", err)
+	}
+}
+
+func writeCallTestConfig(t *testing.T, baseURL string) string {
+	t.Helper()
+	spec, err := filepath.Abs(filepath.Join("..", "openapi", "testdata", "fixture.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("CONSOLE_OPENAPI_SPEC", spec)
+	t.Setenv("CONSOLE_BASE_URL", "")
+	t.Setenv("CONSOLE_DEFAULT_ENV", "dev")
+	t.Setenv("CONSOLE_CONFIG", "")
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "environments.yaml")
+	body := "listen: \"127.0.0.1:0\"\nopenapi_spec: \"" + spec + "\"\ndefault_environment: dev\nenvironments:\n  - id: dev\n    name: DEV\n    base_url: \"" + baseURL + "\"\n    production: false\n"
+	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
 }

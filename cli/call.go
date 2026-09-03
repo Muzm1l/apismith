@@ -17,19 +17,21 @@ import (
 
 func newCallCmd() *cobra.Command {
 	var (
-		envID     string
-		body      string
-		bodyFile  string
-		noAuth    bool
-		expect    string
-		quiet     bool
-		confirm   bool
-		pathKVs   []string
-		queryKVs  []string
-		headerKVs []string
-		clientID  string
-		username  string
-		password  string
+		envID      string
+		body       string
+		bodyFile   string
+		noAuth     bool
+		useIDToken bool
+		expect     string
+		quiet      bool
+		confirm    bool
+		pathKVs    []string
+		queryKVs   []string
+		headerKVs  []string
+		clientID   string
+		username   string
+		password   string
+		baseURL    string
 	)
 	cmd := &cobra.Command{
 		Use:     "call [METHOD PATH | OPERATION_ID]",
@@ -99,10 +101,18 @@ func newCallCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("jwt: %w", err)
 				}
-				in.JWT = tokens.AccessToken
+				token, err := selectAuthToken(tokens, useIDToken)
+				if err != nil {
+					return err
+				}
+				in.JWT = token
 			}
 
-			out := request.NewExecutor().Execute(in, env.BaseURL, env.Production)
+			target, err := request.ResolveBaseURL(env.BaseURL, baseURL)
+			if err != nil {
+				return err
+			}
+			out := request.NewExecutor().Execute(in, target, env.Production)
 			if strings.Contains(strings.ToLower(out.ContentType), "json") {
 				out.Body = request.PrettyJSON(out.Body)
 			}
@@ -117,9 +127,11 @@ func newCallCmd() *cobra.Command {
 		},
 	}
 	cmd.Flags().StringVarP(&envID, "env", "e", "", "environment id (default from config)")
+	cmd.Flags().StringVar(&baseURL, "base-url", "", "override the environment base URL for this request")
 	cmd.Flags().StringVar(&body, "body", "", "JSON request body")
 	cmd.Flags().StringVar(&bodyFile, "body-file", "", "read request body from a file")
 	cmd.Flags().BoolVar(&noAuth, "no-auth", false, "do not attach a Cognito JWT")
+	cmd.Flags().BoolVar(&useIDToken, "id-token", false, "use Cognito id_token instead of access_token for Authorization")
 	cmd.Flags().StringVar(&expect, "expect", "", "expected status (e.g. 200 or 2xx); default is any 2xx")
 	cmd.Flags().BoolVarP(&quiet, "quiet", "q", false, "print only the status line")
 	cmd.Flags().BoolVar(&confirm, "confirm-production", false, "allow sending to a production environment")
@@ -130,6 +142,22 @@ func newCallCmd() *cobra.Command {
 	cmd.Flags().StringVar(&username, "username", "", "override username")
 	cmd.Flags().StringVar(&password, "password", "", "override password")
 	return cmd
+}
+
+func selectAuthToken(tokens *cognito.Tokens, useIDToken bool) (string, error) {
+	if tokens == nil {
+		return "", fmt.Errorf("missing cognito tokens")
+	}
+	if useIDToken {
+		if tokens.IDToken == "" {
+			return "", fmt.Errorf("Cognito returned empty id_token")
+		}
+		return tokens.IDToken, nil
+	}
+	if tokens.AccessToken == "" {
+		return "", fmt.Errorf("Cognito returned empty access_token")
+	}
+	return tokens.AccessToken, nil
 }
 
 // errSilent is used when call should exit 1 without reprinting the error.

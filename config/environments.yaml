@@ -19,6 +19,7 @@ environments:
       endpoint: ""
       auth_flow: srp
 
+  # Point this at a hosted API to test remotely instead of localhost.
   - id: staging
     name: STAGING
     base_url: https://staging-api.example.com/api/v1

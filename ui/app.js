@@ -52,6 +52,7 @@ function applyEnv() {
   const env = currentEnv();
   if (!env) return;
   $("prod-badge").classList.toggle("hidden", !env.production);
+  $("base-url").value = env.base_url || "";
   if (env.client_id && !$("client-id").value) $("client-id").value = env.client_id;
   $("username").placeholder = env.has_stored_credentials ? "using server credentials" : "Cognito username / email";
   $("password").placeholder = env.has_stored_credentials ? "using server credentials" : "Cognito password";
@@ -215,6 +216,7 @@ function collectRequest() {
   }
   return {
     environment: state.envId,
+    base_url: $("base-url").value.trim(),
     method: ep.method,
     path: ep.path,
     path_params: pathParams,
@@ -231,7 +233,7 @@ async function confirmProductionIfNeeded(payload) {
   const env = currentEnv();
   if (!env || !env.production) return payload;
   const dialog = $("prod-dialog");
-  $("prod-dialog-detail").textContent = `${payload.method} ${payload.path}`;
+  $("prod-dialog-detail").textContent = `${payload.method} ${payload.path} → ${payload.base_url || env.base_url || ""}`;
   dialog.showModal();
   return new Promise((resolve) => {
     dialog.addEventListener("close", function onClose() {

@@ -211,7 +211,13 @@ func (s *Server) handleExecute(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	out := s.exec.Execute(in, env.BaseURL, env.Production)
+	baseURL, err := request.ResolveBaseURL(env.BaseURL, in.BaseURL)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	out := s.exec.Execute(in, baseURL, env.Production)
 	if strings.Contains(strings.ToLower(out.ContentType), "json") {
 		out.Body = request.PrettyJSON(out.Body)
 	}
